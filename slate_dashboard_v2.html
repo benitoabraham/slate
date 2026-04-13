@@ -99,9 +99,9 @@ tr:hover td{background:#111f30}
   </div>
   <div class="filter-row">
     <span class="filter-label">Date</span>
-    <button class="fbtn on" onclick="toggleYear('All')">All Years</button>
-    <button class="fbtn" onclick="toggleYear('2025')">2025</button>
-    <button class="fbtn" onclick="toggleYear('2026')">2026</button>
+    <select class="fsel" id="year-sel" onchange="toggleYear(this.value)">
+      <option value="All">All Years</option>
+    </select>
     <select class="fsel" id="month-sel" onchange="setMonth(this.value)">
       <option value="All">All Months</option>
       <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option>
@@ -284,14 +284,24 @@ function toggleStatus(s){
 }
 function toggleYear(y){
   fYear=y;
-  document.querySelectorAll('.fbtn').forEach(b=>{const fn=b.getAttribute('onclick')||'';if(fn.includes('toggleYear')){const m=fn.match(/toggleYear\('(.+?)'\)/);if(m)b.classList.toggle('on',m[1]===y);}});
+  document.getElementById('year-sel').value=y;
   updateActiveTags();render();
+}
+function populateYears(){
+  const years=new Set();
+  ALL.forEach(r=>{if(r.date){const d=new Date(r.date);if(!isNaN(d))years.add(d.getFullYear());}});
+  const sel=document.getElementById('year-sel');
+  [...years].sort().forEach(y=>{
+    const opt=document.createElement('option');
+    opt.value=y;opt.textContent=y;
+    sel.appendChild(opt);
+  });
 }
 function setMonth(m){fMonth=m;updateActiveTags();render();}
 function updateActiveTags(){
   const tags=[];
   if(fStatus!=='All')tags.push(`Status: ${fStatus} <span class="af-x" onclick="toggleStatus('All')">×</span>`);
-  if(fYear!=='All')tags.push(`Year: ${fYear} <span class="af-x" onclick="toggleYear('All')">×</span>`);
+  if(fYear!=='All')tags.push(`Year: ${fYear} <span class="af-x" onclick="toggleYear('All');document.getElementById('year-sel').value='All'">×</span>`);
   if(fMonth!=='All')tags.push(`Month: ${fMonth} <span class="af-x" onclick="setMonth('All');document.getElementById('month-sel').value='All'">×</span>`);
   if(fCompany)tags.push(`Company: ${fCompany} <span class="af-x" onclick="clearSearch()">×</span>`);
   document.getElementById('active-filters').innerHTML=tags.map(t=>`<span class="af-tag">${t}</span>`).join('');
@@ -361,6 +371,7 @@ function render(){
   document.getElementById('coll-chart').innerHTML=cStats.length?cStats.map(s=>{const d=sm[s];const cp=d.contract>0?Math.round(d.collected/d.contract*100):0;return`<div class="bar-row"><div class="bar-lbl">${s.split(' ')[0]}</div><div class="bar-track"><div class="bar-fill" style="width:${cp}%;background:${STATUS_COLORS[s]}"></div></div><div class="bar-val">${cp}%</div></div>`;}).join(''):`<div class="nd">No data</div>`;
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))document.getElementById('suggestion-box').style.display='none';});
+populateYears();
 render();
 </script>
 </body>
